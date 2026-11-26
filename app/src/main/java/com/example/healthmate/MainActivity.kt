@@ -16,6 +16,10 @@ import com.example.healthmate.ui.theme.HealthMateTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.Alignment
 
 class MainActivity : ComponentActivity() {
 
@@ -173,6 +177,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun HealthMateDashboard(
     onAddRecordClick: () -> Unit,
@@ -180,7 +185,7 @@ fun HealthMateDashboard(
     todaySteps: Int,
     todayCalories: Int,
     todayWater: Int
-){
+) {
 
     val today = SimpleDateFormat(
         "dd MMMM yyyy",
@@ -188,7 +193,8 @@ fun HealthMateDashboard(
     ).format(Date())
 
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Color(0xFFF6F8FC)
     ) { innerPadding ->
 
         Column(
@@ -201,60 +207,131 @@ fun HealthMateDashboard(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
+            // App Header
             Text(
-                text = "HealthMate",
-                style = MaterialTheme.typography.headlineLarge
+                text = "💚 HealthMate",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF173B67)
             )
 
-            Text("Personal Health & Wellness Tracker")
-
             Text(
-                text = "Today's Health Overview",
-                style = MaterialTheme.typography.titleLarge
+                text = "Personal Health & Wellness Tracker",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF64748B)
             )
 
-            Text(today)
+            // Date Overview Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFEAF2FF)
+                )
+            ) {
 
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    Text(
+                        text = "TODAY'S OVERVIEW",
+                        color = Color(0xFF2563EB),
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = today,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color(0xFF1E3A5F)
+                    )
+
+                    Text(
+                        text = "Track your daily activities and stay healthy.",
+                        color = Color(0xFF475569)
+                    )
+                }
+            }
+
+            Text(
+                text = "Your Daily Activity",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Steps Card
             HealthSummaryCard(
                 title = "Steps Walked",
                 value = todaySteps.toString(),
-                unit = "steps"
+                unit = "steps",
+                icon = "👣",
+                cardColor = Color(0xFFE9F2FF),
+                valueColor = Color(0xFF2563EB)
             )
 
+            // Calories Card
             HealthSummaryCard(
                 title = "Calories Burned",
                 value = todayCalories.toString(),
-                unit = "kcal"
+                unit = "kcal",
+                icon = "🔥",
+                cardColor = Color(0xFFFDECEC),
+                valueColor = Color(0xFF945151)
             )
 
+            // Water Card
             HealthSummaryCard(
                 title = "Water Intake",
                 value = todayWater.toString(),
-                unit = "ml"
+                unit = "ml",
+                icon = "💧",
+                cardColor = Color(0xFFE5F7FC),
+                valueColor = Color(0xFF0891B2)
             )
 
+            // Add Record Button
             Button(
                 onClick = onAddRecordClick,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(15.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2563EB)
+                )
             ) {
-                Text("Add Health Record")
+                Text(
+                    text = "＋ Add Health Record",
+                    fontWeight = FontWeight.Bold
+                )
             }
 
+            // View Records Button
             OutlinedButton(
                 onClick = onViewRecordsClick,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(15.dp)
             ) {
-                Text("View Health Records")
+                Text(
+                    text = "View Health Records",
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Text(
-                text = "Your Health Matters!",
-                style = MaterialTheme.typography.titleMedium
+                text = "💚 Your Health Matters!",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF173B67)
             )
 
             Text(
                 text = "Keep tracking your daily activities " +
-                        "to maintain a healthy lifestyle."
+                        "to maintain a healthy lifestyle.",
+                color = Color(0xFF64748B)
             )
         }
     }
@@ -264,28 +341,62 @@ fun HealthMateDashboard(
 fun HealthSummaryCard(
     title: String,
     value: String,
-    unit: String
+    unit: String,
+    icon: String,
+    cardColor: Color,
+    valueColor: Color
 ) {
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = cardColor
+        )
     ) {
 
-        Column(
-            modifier = Modifier.padding(20.dp)
+        Row(
+            modifier = Modifier.padding(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
 
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium
+                text = icon,
+                style = MaterialTheme.typography.headlineLarge
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Column(
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
 
-            Text(
-                text = "$value $unit",
-                style = MaterialTheme.typography.headlineMedium
-            )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF334155)
+                )
+
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = valueColor
+                    )
+
+                    Text(
+                        text = unit,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF64748B)
+                    )
+                }
+            }
         }
     }
 }
+
