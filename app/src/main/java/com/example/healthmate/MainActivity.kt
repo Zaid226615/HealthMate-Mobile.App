@@ -41,6 +41,15 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf<HealthRecord?>(null)
                 }
 
+                val todayDate = SimpleDateFormat(
+                    "yyyy-MM-dd",
+                    Locale.getDefault()
+                ).format(Date())
+
+                val todayRecords = records.filter {
+                    it.date == todayDate
+                }
+
                 when (currentScreen) {
 
                     "add" -> {
@@ -140,16 +149,22 @@ class MainActivity : ComponentActivity() {
                             onAddRecordClick = {
 
                                 selectedRecord = null
-
                                 currentScreen = "add"
+
                             },
 
                             onViewRecordsClick = {
 
                                 records = databaseHelper.getAllRecords()
-
                                 currentScreen = "records"
-                            }
+
+                            },
+
+                            todaySteps = todayRecords.sumOf { it.steps },
+
+                            todayCalories = todayRecords.sumOf { it.calories },
+
+                            todayWater = todayRecords.sumOf { it.water }
                         )
                     }
                 }
@@ -161,8 +176,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun HealthMateDashboard(
     onAddRecordClick: () -> Unit,
-    onViewRecordsClick: () -> Unit
-) {
+    onViewRecordsClick: () -> Unit,
+    todaySteps: Int,
+    todayCalories: Int,
+    todayWater: Int
+){
 
     val today = SimpleDateFormat(
         "dd MMMM yyyy",
@@ -199,19 +217,19 @@ fun HealthMateDashboard(
 
             HealthSummaryCard(
                 title = "Steps Walked",
-                value = "7,850",
+                value = todaySteps.toString(),
                 unit = "steps"
             )
 
             HealthSummaryCard(
                 title = "Calories Burned",
-                value = "420",
+                value = todayCalories.toString(),
                 unit = "kcal"
             )
 
             HealthSummaryCard(
                 title = "Water Intake",
-                value = "2,000",
+                value = todayWater.toString(),
                 unit = "ml"
             )
 
