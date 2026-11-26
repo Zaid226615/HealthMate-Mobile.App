@@ -2,44 +2,167 @@
 package com.example.healthmate
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.healthmate.ui.theme.HealthMateTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             HealthMateTheme {
-                HealthMateDashboard()
+
+                val databaseHelper = remember {
+                    HealthDatabaseHelper(applicationContext)
+                }
+
+                var currentScreen by remember {
+                    mutableStateOf("dashboard")
+                }
+
+                var records by remember {
+                    mutableStateOf(databaseHelper.getAllRecords())
+                }
+
+                var selectedRecord by remember {
+                    mutableStateOf<HealthRecord?>(null)
+                }
+
+                when (currentScreen) {
+
+                    "add" -> {
+
+                        AddRecord(
+                            recordToEdit = selectedRecord,
+
+                            onSave = { record ->
+
+                                val isEditing = record.id != 0
+
+                                val success = if (isEditing) {
+
+                                    databaseHelper.updateRecord(record) > 0
+
+                                } else {
+
+                                    databaseHelper.insertRecord(record) != -1L
+                                }
+
+                                if (success) {
+
+                                    records = databaseHelper.getAllRecords()
+
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        if (isEditing)
+                                            "Health record updated successfully!"
+                                        else
+                                            "Health record saved successfully!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    selectedRecord = null
+
+                                    currentScreen = if (isEditing) {
+                                        "records"
+                                    } else {
+                                        "dashboard"
+                                    }
+
+                                } else {
+
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Unable to save health record",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
+
+                            onCancel = {
+
+                                val wasEditing = selectedRecord != null
+
+                                selectedRecord = null
+
+                                currentScreen = if (wasEditing) {
+                                    "records"
+                                } else {
+                                    "dashboard"
+                                }
+                            }
+                        )
+                    }
+
+                    "records" -> {
+
+                        ViewRecords(
+                            records = records,
+
+                            onDelete = { id ->
+
+                                databaseHelper.deleteRecord(id)
+
+                                records = databaseHelper.getAllRecords()
+                            },
+
+                            onEdit = { record ->
+
+                                selectedRecord = record
+
+                                currentScreen = "add"
+                            },
+
+                            onBack = {
+
+                                currentScreen = "dashboard"
+                            }
+                        )
+                    }
+
+                    else -> {
+
+                        HealthMateDashboard(
+
+                            onAddRecordClick = {
+
+                                selectedRecord = null
+
+                                currentScreen = "add"
+                            },
+
+                            onViewRecordsClick = {
+
+                                records = databaseHelper.getAllRecords()
+
+                                currentScreen = "records"
+                            }
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun HealthMateDashboard() {
+fun HealthMateDashboard(
+    onAddRecordClick: () -> Unit,
+    onViewRecordsClick: () -> Unit
+) {
 
     val today = SimpleDateFormat(
         "dd MMMM yyyy",
@@ -65,45 +188,46 @@ fun HealthMateDashboard() {
                 style = MaterialTheme.typography.headlineLarge
             )
 
-            Text(
-                text = "Personal Health & Wellness Tracker",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Text("Personal Health & Wellness Tracker")
 
             Text(
                 text = "Today's Health Overview",
                 style = MaterialTheme.typography.titleLarge
             )
 
-            Text(
-                text = today,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Text(today)
 
             HealthSummaryCard(
                 title = "Steps Walked",
                 value = "7,850",
-                unit = "steps",
-                description = "Daily walking activity"
+                unit = "steps"
             )
 
             HealthSummaryCard(
                 title = "Calories Burned",
                 value = "420",
-                unit = "kcal",
-                description = "Daily calories burned"
+                unit = "kcal"
             )
 
             HealthSummaryCard(
                 title = "Water Intake",
                 value = "2,000",
-                unit = "ml",
-                description = "Daily water consumption"
+                unit = "ml"
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onAddRecordClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Add Health Record")
+            }
+
+            OutlinedButton(
+                onClick = onViewRecordsClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("View Health Records")
+            }
 
             Text(
                 text = "Your Health Matters!",
@@ -112,8 +236,7 @@ fun HealthMateDashboard() {
 
             Text(
                 text = "Keep tracking your daily activities " +
-                        "to maintain a healthy lifestyle.",
-                style = MaterialTheme.typography.bodyMedium
+                        "to maintain a healthy lifestyle."
             )
         }
     }
@@ -123,8 +246,7 @@ fun HealthMateDashboard() {
 fun HealthSummaryCard(
     title: String,
     value: String,
-    unit: String,
-    description: String
+    unit: String
 ) {
 
     Card(
@@ -146,21 +268,6 @@ fun HealthSummaryCard(
                 text = "$value $unit",
                 style = MaterialTheme.typography.headlineMedium
             )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall
-            )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HealthMatePreview() {
-    HealthMateTheme {
-        HealthMateDashboard()
     }
 }
